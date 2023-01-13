@@ -122,11 +122,29 @@ def calculate_desired_points(original_dimensions, marked_points):
         return destine_points  
 
 
+def find_homography(src_points, dst_points):
+    # Create matrix P from corresponding points of the equation PH = 0, considering |H| = 1
+    P = []
+    for i in range(len(src_points)):
+        sx, sy = src_points[i]
+        dx, dy = dst_points[i]
+        P.append([sx, sy, 1, 0, 0, 0, -dx*sx, -dx*sy, -dx])
+        P.append([0, 0, 0, sx, sy, 1, -dy*sx, -dy*sy, -dy])
+    P = np.array(P)
+    
+    # Calculate SVD to decompose matrix P
+    U, S, V = np.linalg.svd(P)
+    
+    # Get the last column of V, that represents the elements of homography matrix, because we consider |H| = 0
+    H = V[-1, :] / V[-1, -1] # Divides by bottom right element to retrieve from homogeneous coordinates
+    return H.reshape(3, 3) # Transforms in 3x3 matrix
+
+
 def apply_homography(image, image_points, original_dimensions):
     sorted_points = sort_image_points(image_points)
     desired_image_points = calculate_desired_points(original_dimensions, sorted_points)
     
-    homography_matrix, status = cv.findHomography(np.array(sorted_points), np.array(desired_image_points))
+    homography_matrix = find_homography(np.array(sorted_points), np.array(desired_image_points))
     return cv.warpPerspective(image, homography_matrix, (image.shape[1], image.shape[0])), desired_image_points
 
 
