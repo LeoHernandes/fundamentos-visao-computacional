@@ -1,3 +1,4 @@
+import math
 import numpy as np
 import cv2 as cv
 import cvui
@@ -129,21 +130,30 @@ def apply_homography(image, image_points, original_dimensions):
     return cv.warpPerspective(image, homography_matrix, (image.shape[1], image.shape[0])), desired_image_points
 
 
-# ---------------------- MAIN CODE ---------------------- # 
 def get_image_proportions(image_path):
     original_image = cv.imread(image_path)
-    return (original_image.shape[1], original_image.shape[0])
+    return original_image, (original_image.shape[1], original_image.shape[0])
 
+
+def PSNR(original_image, transformed_image):
+    # Get the mean squared error between the images
+    mse = np.mean((original_image - transformed_image) ** 2)
+    psnr = 20 * math.log10(255.0 / math.sqrt(mse))
+    return psnr
+
+
+# ---------------------- MAIN CODE ---------------------- # 
 if __name__ == "__main__":
     image_points = []                   # Marked points on image
     image_cache = []                    # Cache of marked points, used on "undo" button
     perspective_image = None            # Image to be processed
     perspective_image_copy = None       # Image copy to draw points
+    original_image = None               # Original digital image
     original_image_dimensions = None    # Original image width and height (in this order) to make correct proportions
     crop_points = None                  # Stores the destine points of the homography operation 
     is_homography_applied = False       # Controls the state of program
 
-    frame = np.zeros((420, 200, 3), dtype = "uint8")
+    frame = np.zeros((500, 200, 3), dtype = "uint8")
     frame.fill(32)
 
     cvui.init("Menu")
@@ -157,28 +167,28 @@ if __name__ == "__main__":
         if cvui.button(frame, 20, 20, 160, 40, "Load beach image 1"):
             perspective_image = load_resized_image(BEACH_PERSPECTIVE_1)
             perspective_image_copy = perspective_image.copy()
-            original_image_dimensions = get_image_proportions(BEACH_ORIGINAL)
+            original_image, original_image_dimensions = get_image_proportions(BEACH_ORIGINAL)
             image_points = []
             is_homography_applied = False
 
         if cvui.button(frame, 20, 70, 160, 40, "Load beach image 2"):
             perspective_image = load_resized_image(BEACH_PERSPECTIVE_2)
             perspective_image_copy = perspective_image.copy()
-            original_image_dimensions = get_image_proportions(BEACH_ORIGINAL)
+            original_image, original_image_dimensions = get_image_proportions(BEACH_ORIGINAL)
             image_points = []
             is_homography_applied = False
 
         if cvui.button(frame, 20, 120, 160, 40, "Load sunset image 1"):
             perspective_image = load_resized_image(SUNSET_PERSPECTIVE_1)
             perspective_image_copy = perspective_image.copy()
-            original_image_dimensions = get_image_proportions(SUNSET_ORIGINAL)
+            original_image, original_image_dimensions = get_image_proportions(SUNSET_ORIGINAL)
             image_points = []
             is_homography_applied = False
 
         if cvui.button(frame, 20, 170, 160, 40, "Load sunset image 2"):
             perspective_image = load_resized_image(SUNSET_PERSPECTIVE_2)
             perspective_image_copy = perspective_image.copy()
-            original_image_dimensions = get_image_proportions(SUNSET_ORIGINAL)
+            original_image, original_image_dimensions = get_image_proportions(SUNSET_ORIGINAL)
             image_points = []
             is_homography_applied = False
 
@@ -193,6 +203,17 @@ if __name__ == "__main__":
         if cvui.button(frame, 20, 360, 160, 40, "Crop image") and is_homography_applied:
             perspective_image_copy = perspective_image_copy[crop_points[0][1] : crop_points[3][1],
                                                             crop_points[0][0] : crop_points[1][0]]
+            
+        if cvui.button(frame, 20, 420, 160, 40, "Calculate PSNR") and is_homography_applied:
+            original_grayscale = cv.cvtColor(original_image, cv.COLOR_BGR2GRAY)
+            original_grayscale = cv.resize(original_grayscale, 
+                                           (perspective_image_copy.shape[1], perspective_image_copy.shape[0]),
+                                           interpolation = cv.INTER_AREA)
+            perspective_image_graysacle = cv.cvtColor(perspective_image_copy, cv.COLOR_BGR2GRAY)
+            psnr = PSNR(original_grayscale, perspective_image_graysacle)
+            image = cv.putText(original_grayscale, "PSNR = " + "{:.2f}".format(psnr),
+                               (50, 50), cv.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 2, cv.LINE_AA)
+            cv.imshow("test", original_grayscale)
         
         # Create windows ----------------------
         if perspective_image_copy is not None:
