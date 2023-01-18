@@ -123,7 +123,7 @@ def calculate_desired_points(original_dimensions, marked_points):
 
 
 def find_homography(src_points, dst_points):
-    # Create matrix P from corresponding points of the equation PH = 0, considering |H| = 1
+    # Create matrix P from corresponding points of the equation
     P = []
     for i in range(len(src_points)):
         sx, sy = src_points[i]
@@ -135,9 +135,9 @@ def find_homography(src_points, dst_points):
     # Calculate SVD to decompose matrix P
     U, S, V = np.linalg.svd(P)
     
-    # Get the last column of V, that represents the elements of homography matrix, because we consider |H| = 0
-    H = V[-1, :] / V[-1, -1] # Divides by bottom right element to retrieve from homogeneous coordinates
-    return H.reshape(3, 3) # Transforms in 3x3 matrix
+    # Get the last column of V, which is the singular vector corresponding to 
+    # the smallest singular value in S (sigma) matrix 
+    return np.reshape(V[-1], (3, 3)) # Transforms in 3x3 matrix
 
 
 def apply_homography(image, image_points, original_dimensions):
