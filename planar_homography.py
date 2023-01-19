@@ -133,11 +133,11 @@ def find_homography(src_points, dst_points):
     P = np.array(P)
     
     # Calculate SVD to decompose matrix P
-    U, S, V = np.linalg.svd(P)
+    U, S, V_transpose = np.linalg.svd(P)
     
-    # Get the last column of V, which is the singular vector corresponding to 
+    # Get the last row of V, which is the singular vector corresponding to 
     # the smallest singular value in S (sigma) matrix 
-    return np.reshape(V[-1], (3, 3)) # Transforms in 3x3 matrix
+    return np.reshape(V_transpose[-1], (3, 3)) # Transforms in 3x3 matrix
 
 
 def apply_homography(image, image_points, original_dimensions):
