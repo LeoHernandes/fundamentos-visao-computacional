@@ -171,7 +171,7 @@ if __name__ == "__main__":
     crop_points = None                  # Stores the destine points of the homography operation 
     is_homography_applied = False       # Controls the state of program
 
-    frame = np.zeros((500, 200, 3), dtype = "uint8")
+    frame = np.zeros((450, 200, 3), dtype = "uint8")
     frame.fill(32)
 
     cvui.init("Menu")
@@ -214,15 +214,15 @@ if __name__ == "__main__":
             perspective_image_copy = image_cache.pop()
             image_points.pop()
         
-        if cvui.button(frame, 20, 300, 160, 40, "Apply homography") and len(image_points) == 4:
+        if cvui.button(frame, 20, 290, 160, 40, "Apply homography") and len(image_points) == 4:
             perspective_image_copy, crop_points = apply_homography(perspective_image, image_points, original_image_dimensions)
             is_homography_applied = True
         
-        if cvui.button(frame, 20, 360, 160, 40, "Crop image") and is_homography_applied:
+        if cvui.button(frame, 20, 340, 160, 40, "Crop image") and is_homography_applied:
             perspective_image_copy = perspective_image_copy[crop_points[0][1] : crop_points[3][1],
                                                             crop_points[0][0] : crop_points[1][0]]
             
-        if cvui.button(frame, 20, 420, 160, 40, "Calculate PSNR") and is_homography_applied:
+        if cvui.button(frame, 20, 390, 160, 40, "Calculate PSNR") and is_homography_applied:
             original_grayscale = cv.cvtColor(original_image, cv.COLOR_BGR2GRAY)
             original_grayscale = cv.resize(original_grayscale, 
                                            (perspective_image_copy.shape[1], perspective_image_copy.shape[0]),
